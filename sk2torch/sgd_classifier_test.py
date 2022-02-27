@@ -3,6 +3,7 @@ from typing import Tuple
 import numpy as np
 import pytest
 import torch
+import torch.jit
 from sklearn.datasets import load_breast_cancer, load_digits
 from sklearn.linear_model import SGDClassifier
 
@@ -40,7 +41,7 @@ def test_linear_sgd(dataset, loss, check_probs):
     x, y = dataset(return_X_y=True)
     sk_obj = SGDClassifier(loss=loss)
     sk_obj.fit(x, y)
-    th_obj = TorchSGDClassifier.wrap(sk_obj)
+    th_obj = torch.jit.script(TorchSGDClassifier.wrap(sk_obj))
 
     x_th = torch.from_numpy(x)
 
