@@ -1,8 +1,10 @@
+from copy import deepcopy
+
 import torch
 import torch.jit
 import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.base import BaseEstimator, clone
+from sklearn.base import BaseEstimator
 from sklearn.linear_model import SGDClassifier
 
 
@@ -19,11 +21,11 @@ class TorchSGDClassifier(nn.Module):
 
     @classmethod
     def wrap(cls, obj: SGDClassifier) -> "TorchSGDClassifier":
-        est = clone(obj)
+        est = deepcopy(obj)
         est.densify()
         return cls(
-            weights=est.coef_,
-            biases=est.intercept_,
+            weights=torch.from_numpy(est.coef_),
+            biases=torch.from_numpy(est.intercept_),
             loss=est.loss,
         )
 
@@ -53,8 +55,10 @@ class TorchSGDClassifier(nn.Module):
         if self.loss == "log":
             logits = self.decision_function(x)
             if len(logits.shape) == 1:
-                return torch.stack([F.logsigmoid(-logits), F.logsigmoid(logits)])
+                return torch.stack(
+                    [F.logsigmoid(-logits), F.logsigmoid(logits)], dim=-1
+                )
             # This is a one-versus-rest classifier.
-            return F.log_softmax(F.logsigmoid(logits), axis=-1)
+            return F.log_softmax(F.logsigmoid(logits), dim=-1)
         else:
             assert False, "probability prediction not supported for loss: " + self.loss
