@@ -6,7 +6,7 @@ import torch
 from sklearn.datasets import load_breast_cancer, load_digits
 from sklearn.linear_model import SGDClassifier
 
-from .linear_sgd import TorchSGDClassifier
+from .sgd_classifier import TorchSGDClassifier
 
 
 def xor_dataset(**_) -> Tuple[np.ndarray, np.ndarray]:

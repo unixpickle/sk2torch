@@ -1,7 +1,7 @@
 import torch.nn as nn
 from sklearn.base import BaseEstimator
 
-from .linear_sgd import TorchSGDClassifier
+from .sgd_classifier import TorchSGDClassifier
 
 _REGISTRY = [TorchSGDClassifier]
 
