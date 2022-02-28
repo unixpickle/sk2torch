@@ -29,17 +29,18 @@ def xor_and_dataset(**_) -> Tuple[np.ndarray, np.ndarray]:
 
 
 @pytest.mark.parametrize(
-    ("dataset", "loss", "check_probs"),
+    ("dataset", "loss", "check_probs", "fit_intercept"),
     [
-        (load_breast_cancer, "log", False),
-        (load_digits, "log", False),
-        (xor_dataset, "log", True),
-        (xor_and_dataset, "log", True),
+        (load_breast_cancer, "log", False, True),
+        (load_digits, "log", False, True),
+        (xor_dataset, "log", True, True),
+        (xor_and_dataset, "log", True, True),
+        (xor_and_dataset, "log", True, False),
     ],
 )
-def test_linear_sgd(dataset, loss, check_probs):
+def test_linear_sgd(dataset, loss, check_probs, fit_intercept):
     x, y = dataset(return_X_y=True)
-    sk_obj = SGDClassifier(loss=loss)
+    sk_obj = SGDClassifier(loss=loss, fit_intercept=fit_intercept)
     sk_obj.fit(x, y)
     th_obj = torch.jit.script(TorchSGDClassifier.wrap(sk_obj))
 
