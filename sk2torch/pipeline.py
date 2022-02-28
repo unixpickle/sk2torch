@@ -60,28 +60,28 @@ class TorchPipeline(nn.Module):
     @torch.jit.export
     def decision_function(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Run the pipeline and call decision_function on the final model.
+        Run the pipeline and call decision_function() on the final model.
         """
         return self.final.decision_function(self._run_transforms(x))
 
     @torch.jit.export
     def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Run the pipeline and call predict_proba on the final model.
+        Run the pipeline and call predict_proba() on the final model.
         """
         return self.final.predict_proba(self._run_transforms(x))
 
     @torch.jit.export
     def predict_log_proba(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Run the pipeline and call predict_log_proba on the final model.
+        Run the pipeline and call predict_log_proba() on the final model.
         """
         return self.final.predict_log_proba(self._run_transforms(x))
 
     @torch.jit.export
     def transform(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Run the pipeline and call predict_log_proba on the final model.
+        Run the pipeline and call transform() on the final model.
         """
         return self.final.transform(self._run_transforms(x))
 
@@ -93,7 +93,7 @@ class TorchPipeline(nn.Module):
     @torch.jit.export
     def inverse_transform(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Run the pipeline and call predict_log_proba on the final model.
+        Run the pipeline and call inverse_transform() on the final model.
         """
         x = self.final.inverse_transform(x)
         for transform in self.transforms.values()[::-1]:
