@@ -1,9 +1,11 @@
 import torch.nn as nn
 from sklearn.base import BaseEstimator
 
+from .pipeline import TorchPipeline
 from .sgd_classifier import TorchSGDClassifier
+from .standard_scaler import TorchStandardScaler
 
-_REGISTRY = [TorchSGDClassifier]
+_REGISTRY = [TorchSGDClassifier, TorchStandardScaler, TorchPipeline]
 
 
 def wrap(obj: BaseEstimator) -> nn.Module:

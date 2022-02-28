@@ -25,6 +25,10 @@ class TorchStandardScaler(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.transform(x)
+
+    @torch.jit.export
+    def transform(self, x: torch.Tensor) -> torch.Tensor:
         return (x - self.mean) / self.scale
 
     @torch.jit.export

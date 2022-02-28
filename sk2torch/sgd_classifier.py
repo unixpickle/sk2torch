@@ -29,7 +29,16 @@ class TorchSGDClassifier(nn.Module):
             loss=est.loss,
         )
 
-    def forward(self, x: torch.Tensor) -> torch.LongTensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Predict class labels for the given feature vectors.
+
+        An alias for self.predict().
+        """
+        return self.predict(x)
+
+    @torch.jit.export
+    def predict(self, x: torch.Tensor) -> torch.Tensor:
         """
         Predict class labels for the given feature vectors.
         """
