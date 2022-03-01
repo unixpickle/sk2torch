@@ -53,7 +53,7 @@ def test_pipeline_transform():
 
     x_th = torch.from_numpy(x)
     with torch.no_grad():
-        expected = sk_obj.transform(x_th)
+        expected = sk_obj.transform(x)
         actual = th_obj.transform(x_th).numpy()
         assert (expected == actual).all()
 

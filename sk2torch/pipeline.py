@@ -11,25 +11,19 @@ class TorchPipeline(nn.Module):
     def __init__(self, stages: List[Tuple[str, nn.Module]]):
         super().__init__()
         self.transforms = nn.ModuleDict({k: v for k, v in stages[:-1]})
+        for transform in self.transforms.values():
+            _fill_unsupported(transform, "inverse_transform")
+
         self.final_name, self.final = stages[-1]
-        for name in [
+        _fill_unsupported(
+            self.final,
             "decision_function",
             "predict",
             "predict_proba",
             "predict_log_proba",
             "transform",
             "inverse_transform",
-        ]:
-            if not hasattr(self.final, name):
-
-                def unsupported_fn(
-                    _: torch.Tensor, unsup_method_name: str = name
-                ) -> torch.Tensor:
-                    raise RuntimeError(
-                        f"method {unsup_method_name} is not supported on this object"
-                    )
-
-                setattr(self.final, name, unsupported_fn)
+        )
 
     @classmethod
     def supports_wrap(cls, obj: BaseEstimator) -> bool:
@@ -99,3 +93,17 @@ class TorchPipeline(nn.Module):
         for transform in self.transforms.values()[::-1]:
             x = transform.inverse_transform(x)
         return x
+
+
+def _fill_unsupported(module: nn.Module, *names: str):
+    for name in names:
+        if not hasattr(module, name):
+
+            def unsupported_fn(
+                _: torch.Tensor, unsup_method_name: str = name
+            ) -> torch.Tensor:
+                raise RuntimeError(
+                    f"method {unsup_method_name} is not supported on this object"
+                )
+
+            setattr(module, name, unsupported_fn)
