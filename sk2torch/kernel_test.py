@@ -25,8 +25,6 @@ def test_kernel(
     metric: str, gamma: Optional[float], coef0: Optional[float], degree: Optional[float]
 ):
     xs, ys = create_test_data()
-    xs = torch.randn(15, 5)
-    ys = torch.randn(13, 5)
     kernel = torch.jit.script(
         Kernel(metric=metric, gamma=gamma, coef0=coef0, degree=degree)
     )
@@ -89,7 +87,7 @@ def create_test_data() -> Tuple[torch.Tensor, torch.Tensor]:
             3.4105,
             -1.5312,
         ],
-        dtype=torch.float32,
+        dtype=torch.float64,
     )
     t2 = torch.tensor(
         [
@@ -133,6 +131,6 @@ def create_test_data() -> Tuple[torch.Tensor, torch.Tensor]:
             0.2133,
             -0.1201,
         ],
-        dtype=torch.float32,
+        dtype=torch.float64,
     )
     return t1.view(-1, 3), t2.view(-1, 3)

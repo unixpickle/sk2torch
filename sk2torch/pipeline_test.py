@@ -19,7 +19,7 @@ def test_pipeline_classifier():
 
     x_th = torch.from_numpy(x).clone()
     with torch.no_grad():
-        expected = sk_obj.predict(x_th)
+        expected = sk_obj.predict(x)
         actual = th_obj.predict(x_th).numpy()
         assert (expected == actual).all()
 

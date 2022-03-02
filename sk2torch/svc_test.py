@@ -49,9 +49,10 @@ def test_svc(
         if probability:
             expected = model.predict_proba(test_xs)
             actual = model_th.predict_proba(test_xs_th).numpy()
-            # Tolerance of 1e-2 seems to be necessary near p=0.5, even
-            # for the case of binary classification where coordinate
-            # descent is not employed.
+            # Tolerance of 1e-2 is necessary because sklearn uses
+            # a less accurate approximation for the binary case, and
+            # more aggressive (non-batched) early stopping for the
+            # multiclass case.
             assert (np.abs(actual - expected) < 1e-2).all()
 
             expected = actual

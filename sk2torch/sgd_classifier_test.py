@@ -36,6 +36,7 @@ def xor_and_dataset(**_) -> Tuple[np.ndarray, np.ndarray]:
         (xor_dataset, "log", True, True),
         (xor_and_dataset, "log", True, True),
         (xor_and_dataset, "log", True, False),
+        (xor_and_dataset, "hinge", False, True),
     ],
 )
 def test_linear_sgd(dataset, loss, check_probs, fit_intercept):
