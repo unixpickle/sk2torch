@@ -1,10 +1,8 @@
-from copy import deepcopy
 from typing import Union
 
 import torch
 import torch.jit
 import torch.nn as nn
-import torch.nn.functional as F
 from sklearn.base import BaseEstimator
 from sklearn.svm import SVR, NuSVR
 

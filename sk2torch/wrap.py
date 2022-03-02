@@ -6,6 +6,7 @@ from .pipeline import TorchPipeline
 from .sgd_classifier import TorchSGDClassifier
 from .standard_scaler import TorchStandardScaler
 from .svc import TorchSVC
+from .svr import TorchSVR
 
 _REGISTRY = [
     TorchNystroem,
@@ -13,6 +14,7 @@ _REGISTRY = [
     TorchSGDClassifier,
     TorchStandardScaler,
     TorchSVC,
+    TorchSVR,
 ]
 
 
