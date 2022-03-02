@@ -122,7 +122,7 @@ class TorchSVC(nn.Module):
         matrix = self._prob_matrix(probs)
         inv_diag = 1 / (torch.diagonal(matrix, dim1=1, dim2=2) + 1e-12)
         guess = torch.ones(len(x), self.n_classes).to(matrix) / self.n_classes
-        masks = torch.eye(self.n_classes)
+        masks = torch.eye(self.n_classes).to(matrix)
 
         # We must use variable name `i` and pre-define `delta`
         # to appease the TorchScript compiler.
