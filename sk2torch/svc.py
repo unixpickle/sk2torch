@@ -130,7 +130,8 @@ class TorchSVC(nn.Module):
         masks = torch.eye(self.n_classes).to(matrix)
 
         # We must use variable name `i` and pre-define `delta`
-        # to appease the TorchScript compiler.
+        # to appease the TorchScript compiler. For the loop, the
+        # variable name "_" does not work.
         delta = torch.zeros_like(guess)
         for i in range(max(100, self.n_classes)):
             # Coordinate descent is performed for each dimension between
@@ -140,7 +141,7 @@ class TorchSVC(nn.Module):
                 mask = masks[coord]
                 # Eq 47 from https://www.csie.ntu.edu.tw/~cjlin/papers/libsvm.pdf
                 mg = (matrix @ guess[:, :, None]).view(guess.shape)
-                outer = (guess * mg).sum(-1, keepdim=True)
+                outer = torch.einsum("ij,ij->i", guess, mg)[:, None]
                 delta = outer - mg
 
                 guess = guess + inv_diag * delta * mask
