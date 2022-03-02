@@ -5,8 +5,15 @@ from .nystroem import TorchNystroem
 from .pipeline import TorchPipeline
 from .sgd_classifier import TorchSGDClassifier
 from .standard_scaler import TorchStandardScaler
+from .svc import TorchSVC
 
-_REGISTRY = [TorchNystroem, TorchPipeline, TorchSGDClassifier, TorchStandardScaler]
+_REGISTRY = [
+    TorchNystroem,
+    TorchPipeline,
+    TorchSGDClassifier,
+    TorchStandardScaler,
+    TorchSVC,
+]
 
 
 def wrap(obj: BaseEstimator) -> nn.Module:
