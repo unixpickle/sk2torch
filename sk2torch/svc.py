@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.jit
@@ -59,7 +59,7 @@ class TorchSVC(nn.Module):
         return isinstance(obj, SVC) or isinstance(obj, NuSVC)
 
     @classmethod
-    def wrap(cls, obj: SVC) -> "TorchSVC":
+    def wrap(cls, obj: Union[SVC, NuSVC]) -> "TorchSVC":
         assert not obj._sparse, "sparse SVC not supported"
         assert obj.decision_function_shape in ["ovo", "ovr"]
         return cls(
