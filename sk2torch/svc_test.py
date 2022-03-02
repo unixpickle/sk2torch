@@ -4,20 +4,26 @@ import numpy as np
 import pytest
 import torch
 import torch.jit
-from sklearn.svm import SVC
+from sklearn.svm import SVC, NuSVC
 
 from .svc import TorchSVC
 
 
 @pytest.mark.parametrize(
-    ("kernel", "probability", "decision_shape", "n_classes", "break_ties"),
+    ("kernel", "probability", "decision_shape", "n_classes", "break_ties", "nu_svc"),
     [
-        ("rbf", True, "ovr", 4, False),
-        ("rbf", True, "ovr", 2, False),
-        ("rbf", True, "ovr", 4, True),
-        ("rbf", True, "ovr", 2, False),
-        ("rbf", True, "ovo", 4, False),
-        ("rbf", True, "ovo", 2, False),
+        ("rbf", True, "ovr", 4, False, False),
+        ("rbf", True, "ovr", 2, False, False),
+        ("rbf", True, "ovr", 4, True, False),
+        ("rbf", True, "ovr", 2, False, False),
+        ("rbf", True, "ovo", 4, False, False),
+        ("rbf", True, "ovo", 2, False, False),
+        ("rbf", True, "ovo", 2, False, False),
+        # Different kernels and NuSVC
+        ("linear", True, "ovr", 4, False, False),
+        ("linear", True, "ovr", 2, False, False),
+        ("linear", True, "ovr", 4, False, True),
+        ("rbf", True, "ovr", 4, False, True),
     ],
 )
 def test_svc(
@@ -26,13 +32,16 @@ def test_svc(
     decision_shape: str,
     n_classes: int,
     break_ties: bool,
+    nu_svc: bool,
 ):
     xs, ys = quadrant_dataset(n_classes)
 
     test_xs = np.random.random(size=(128, 2)) * 2 - 1
     test_xs_th = torch.from_numpy(test_xs)
 
-    model = SVC(kernel=kernel, probability=probability, break_ties=break_ties)
+    model = (SVC if not nu_svc else NuSVC)(
+        kernel=kernel, probability=probability, break_ties=break_ties
+    )
     model.fit(xs, ys)
     model.decision_function_shape = decision_shape
     model_th = torch.jit.script(TorchSVC.wrap(model))

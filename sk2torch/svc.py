@@ -5,7 +5,7 @@ import torch.jit
 import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.base import BaseEstimator
-from sklearn.svm import SVC
+from sklearn.svm import SVC, NuSVC
 
 from .kernel import Kernel
 
@@ -56,7 +56,7 @@ class TorchSVC(nn.Module):
 
     @classmethod
     def supports_wrap(cls, obj: BaseEstimator) -> bool:
-        return isinstance(obj, SVC)
+        return isinstance(obj, SVC) or isinstance(obj, NuSVC)
 
     @classmethod
     def wrap(cls, obj: SVC) -> "TorchSVC":
@@ -111,6 +111,11 @@ class TorchSVC(nn.Module):
         assert self.supports_prob, "model must be trained with probability=True"
         ovo, _ = self.decision_function_ovo_ovr(x)
         if self.n_classes == 2:
+            # This shortcut optimization is present in the latest LibSVM
+            # but not in the scikit-learn fork. As a result, the scikit
+            # version is slightly less accurate in the binary case.
+            # https://github.com/scikit-learn/scikit-learn/blob/82df48934eba1df9a1ed3be98aaace8eada59e6e/sklearn/svm/src/libsvm/svm.cpp#L2925
+
             # For some reason, prob_a has the opposite sign for this case.
             logit = ovo * self.prob_a - self.prob_b
             return torch.cat([logit.sigmoid(), (-logit).sigmoid()], dim=-1)
