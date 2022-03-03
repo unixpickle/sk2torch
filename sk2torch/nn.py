@@ -74,6 +74,9 @@ class TorchMLPClassifier(nn.Module):
             label_binarizer=TorchLabelBinarizer.wrap(obj._label_binarizer),
         )
 
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.predict(x)
+
     @torch.jit.export
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         probs = self.module(x).exp()

@@ -4,6 +4,7 @@ from typing import Tuple
 import numpy as np
 import pytest
 import torch
+import torch.jit
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.neural_network import MLPClassifier
 
@@ -43,7 +44,7 @@ def test_mlp_classifier(
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=ConvergenceWarning)
         sk_model.fit(x[:-100], y[:-100])
-    th_model = TorchMLPClassifier.wrap(sk_model)
+    th_model = torch.jit.script(TorchMLPClassifier.wrap(sk_model))
 
     x = x[-100:]
     x_th = torch.from_numpy(x)
