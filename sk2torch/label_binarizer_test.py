@@ -51,3 +51,9 @@ def test_label_binarizer(inputs: np.ndarray, neg_label: int, pos_label: int):
         expected = sk_obj.inverse_transform(sk_obj.transform(inputs))
         actual = th_obj.inverse_transform(th_obj.transform(inputs_th)).numpy()
         assert (expected == actual).all()
+
+        xf_shape = sk_obj.transform(inputs).shape
+        random_th = torch.rand(100, *xf_shape[1:]).double()
+        expected = sk_obj.inverse_transform(random_th.numpy())
+        actual = th_obj.inverse_transform(random_th).numpy()
+        assert (expected == actual).all()
