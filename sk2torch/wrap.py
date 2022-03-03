@@ -1,6 +1,7 @@
 import torch.nn as nn
 from sklearn.base import BaseEstimator
 
+from .label_binarizer import TorchLabelBinarizer
 from .nystroem import TorchNystroem
 from .pipeline import TorchPipeline
 from .sgd_classifier import TorchSGDClassifier
@@ -9,6 +10,7 @@ from .svc import TorchLinearSVC, TorchSVC
 from .svr import TorchLinearSVR, TorchSVR
 
 _REGISTRY = [
+    TorchLabelBinarizer,
     TorchLinearSVC,
     TorchLinearSVR,
     TorchNystroem,
