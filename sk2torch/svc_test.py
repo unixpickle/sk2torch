@@ -79,6 +79,36 @@ def test_svc(
             assert (np.abs(actual - expected) < 1e-3).all()
 
 
+@pytest.mark.parametrize(
+    ("fit_intercept", "n_classes", "space_classes"),
+    [
+        (False, 2, False),
+        (True, 2, False),
+        (False, 3, False),
+        (True, 3, False),
+        (True, 4, True),
+    ],
+)
+def test_linear_svc(fit_intercept: bool, n_classes: int, space_classes: int):
+    xs, ys = quadrant_dataset(n_classes, space_classes)
+
+    test_xs = np.random.random(size=(128, 2)) * 2 - 1
+    test_xs_th = torch.from_numpy(test_xs)
+
+    model = LinearSVC(fit_intercept=fit_intercept, intercept_scaling=2.314)
+    model.fit(xs, ys)
+    model_th = torch.jit.script(TorchLinearSVC.wrap(model))
+
+    with torch.no_grad():
+        expected = model.decision_function(test_xs)
+        actual = model_th.decision_function(test_xs_th).numpy()
+        assert (np.abs(actual - expected) < 1e-8).all()
+
+        expected = model.predict(test_xs)
+        actual = model_th.predict(test_xs_th).numpy()
+        assert (actual == expected).all()
+
+
 def quadrant_dataset(
     n_classes: int, space_classes: bool
 ) -> Tuple[np.ndarray, np.ndarray]:

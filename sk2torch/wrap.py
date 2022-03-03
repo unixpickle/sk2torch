@@ -5,10 +5,12 @@ from .nystroem import TorchNystroem
 from .pipeline import TorchPipeline
 from .sgd_classifier import TorchSGDClassifier
 from .standard_scaler import TorchStandardScaler
-from .svc import TorchSVC
-from .svr import TorchSVR
+from .svc import TorchLinearSVC, TorchSVC
+from .svr import TorchLinearSVR, TorchSVR
 
 _REGISTRY = [
+    TorchLinearSVC,
+    TorchLinearSVR,
     TorchNystroem,
     TorchPipeline,
     TorchSGDClassifier,
