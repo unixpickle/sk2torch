@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Callable, Tuple
 
 import numpy as np
 import pytest
@@ -42,7 +42,11 @@ def xor_and_dataset(**_) -> Tuple[np.ndarray, np.ndarray]:
     ],
 )
 def test_sgd_classifier(
-    dataset, loss: str, check_probs: bool, fit_intercept: bool, space_classes: bool
+    dataset: Callable[..., Tuple[np.ndarray, np.ndarray]],
+    loss: str,
+    check_probs: bool,
+    fit_intercept: bool,
+    space_classes: bool,
 ):
     x, y = dataset(return_X_y=True)
     if space_classes:
