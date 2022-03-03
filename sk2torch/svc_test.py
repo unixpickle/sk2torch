@@ -4,26 +4,35 @@ import numpy as np
 import pytest
 import torch
 import torch.jit
-from sklearn.svm import SVC, NuSVC
+from sklearn.svm import SVC, LinearSVC, NuSVC
 
-from .svc import TorchSVC
+from .svc import TorchLinearSVC, TorchSVC
 
 
 @pytest.mark.parametrize(
-    ("kernel", "probability", "decision_shape", "n_classes", "break_ties", "nu_svc"),
+    (
+        "kernel",
+        "probability",
+        "decision_shape",
+        "n_classes",
+        "break_ties",
+        "nu_svc",
+        "space_classes",
+    ),
     [
-        ("rbf", True, "ovr", 4, False, False),
-        ("rbf", True, "ovr", 2, False, False),
-        ("rbf", True, "ovr", 4, True, False),
-        ("rbf", True, "ovr", 2, False, False),
-        ("rbf", True, "ovo", 4, False, False),
-        ("rbf", True, "ovo", 2, False, False),
-        ("rbf", True, "ovo", 2, False, False),
+        ("rbf", True, "ovr", 4, False, False, False),
+        ("rbf", True, "ovr", 4, False, False, True),
+        ("rbf", True, "ovr", 2, False, False, False),
+        ("rbf", True, "ovr", 4, True, False, False),
+        ("rbf", True, "ovr", 2, False, False, False),
+        ("rbf", True, "ovo", 4, False, False, False),
+        ("rbf", True, "ovo", 2, False, False, False),
+        ("rbf", True, "ovo", 2, False, False, False),
         # Different kernels and NuSVC
-        ("linear", True, "ovr", 4, False, False),
-        ("linear", True, "ovr", 2, False, False),
-        ("linear", True, "ovr", 4, False, True),
-        ("rbf", True, "ovr", 4, False, True),
+        ("linear", True, "ovr", 4, False, False, False),
+        ("linear", True, "ovr", 2, False, False, False),
+        ("linear", True, "ovr", 4, False, True, False),
+        ("rbf", True, "ovr", 4, False, True, False),
     ],
 )
 def test_svc(
@@ -33,8 +42,9 @@ def test_svc(
     n_classes: int,
     break_ties: bool,
     nu_svc: bool,
+    space_classes: bool,
 ):
-    xs, ys = quadrant_dataset(n_classes)
+    xs, ys = quadrant_dataset(n_classes, space_classes)
 
     test_xs = np.random.random(size=(128, 2)) * 2 - 1
     test_xs_th = torch.from_numpy(test_xs)
@@ -69,7 +79,9 @@ def test_svc(
             assert (np.abs(actual - expected) < 1e-3).all()
 
 
-def quadrant_dataset(n_classes: int) -> Tuple[np.ndarray, np.ndarray]:
+def quadrant_dataset(
+    n_classes: int, space_classes: bool
+) -> Tuple[np.ndarray, np.ndarray]:
     xs = np.random.RandomState(1337).random(size=(500, 2)) * 2 - 1
     ys = np.array([int(x[0] > 0) | (int(x[1] > 0) << 1) for x in xs])
 
@@ -85,5 +97,8 @@ def quadrant_dataset(n_classes: int) -> Tuple[np.ndarray, np.ndarray]:
         xs, ys = xs[indices], ys[indices]
     else:
         assert n_classes == 4
+
+    if space_classes:
+        ys = np.where(ys > n_classes // 2, 1 + (n_classes - ys) + n_classes // 2, ys)
 
     return xs, ys

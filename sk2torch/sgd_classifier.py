@@ -9,11 +9,18 @@ from sklearn.linear_model import SGDClassifier
 
 
 class TorchSGDClassifier(nn.Module):
-    def __init__(self, weights: torch.Tensor, biases: torch.Tensor, loss: str):
+    def __init__(
+        self,
+        weights: torch.Tensor,
+        biases: torch.Tensor,
+        classes: torch.Tensor,
+        loss: str,
+    ):
         super().__init__()
         self.loss = loss
         self.weights = nn.Parameter(weights)
         self.biases = nn.Parameter(biases)
+        self.register_buffer("classes", classes)
 
     @classmethod
     def supports_wrap(cls, obj: BaseEstimator) -> bool:
@@ -26,6 +33,7 @@ class TorchSGDClassifier(nn.Module):
         return cls(
             weights=torch.from_numpy(est.coef_),
             biases=torch.from_numpy(est.intercept_),
+            classes=torch.from_numpy(est.classes_),
             loss=est.loss,
         )
 
@@ -44,9 +52,10 @@ class TorchSGDClassifier(nn.Module):
         """
         scores = self.decision_function(x)
         if len(scores.shape) == 1:
-            return (scores > 0).long()
+            indices = (scores > 0).long()
         else:
-            return scores.argmax(-1)
+            indices = scores.argmax(-1)
+        return self.classes[indices]
 
     @torch.jit.export
     def decision_function(self, x: torch.Tensor) -> torch.Tensor:

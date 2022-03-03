@@ -29,18 +29,26 @@ def xor_and_dataset(**_) -> Tuple[np.ndarray, np.ndarray]:
 
 
 @pytest.mark.parametrize(
-    ("dataset", "loss", "check_probs", "fit_intercept"),
+    ("dataset", "loss", "check_probs", "fit_intercept", "space_classes"),
     [
-        (load_breast_cancer, "log", False, True),
-        (load_digits, "log", False, True),
-        (xor_dataset, "log", True, True),
-        (xor_and_dataset, "log", True, True),
-        (xor_and_dataset, "log", True, False),
-        (xor_and_dataset, "hinge", False, True),
+        (load_breast_cancer, "log", False, True, False),
+        (load_breast_cancer, "log", False, True, False),
+        (load_digits, "log", False, True, False),
+        (load_digits, "log", False, True, True),
+        (xor_dataset, "log", True, True, False),
+        (xor_and_dataset, "log", True, True, False),
+        (xor_and_dataset, "log", True, False, False),
+        (xor_and_dataset, "hinge", False, True, False),
     ],
 )
-def test_linear_sgd(dataset, loss, check_probs, fit_intercept):
+def test_sgd_classifier(
+    dataset, loss: str, check_probs: bool, fit_intercept: bool, space_classes: bool
+):
     x, y = dataset(return_X_y=True)
+    if space_classes:
+        n_classes = np.max(y)
+        y = np.where(y > n_classes // 2, 1 + (n_classes - y) + n_classes // 2, y)
+
     sk_obj = SGDClassifier(loss=loss, fit_intercept=fit_intercept)
     sk_obj.fit(x, y)
     th_obj = torch.jit.script(TorchSGDClassifier.wrap(sk_obj))

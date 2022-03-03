@@ -20,6 +20,7 @@ class TorchSVC(nn.Module):
         support_vectors: torch.Tensor,
         intercept: torch.Tensor,
         dual_coef: torch.Tensor,
+        classes: torch.Tensor,
         prob_a: Optional[torch.Tensor],
         prob_b: Optional[torch.Tensor],
     ):
@@ -31,6 +32,7 @@ class TorchSVC(nn.Module):
         self.support_vectors = nn.Parameter(support_vectors)
         self.intercept = nn.Parameter(intercept)
         self.dual_coef = nn.Parameter(dual_coef)
+        self.register_buffer("classes", classes)
         self.supports_prob = prob_a is not None and prob_b is not None
         self.prob_a = nn.Parameter(
             torch.ones_like(intercept) if prob_a is None else prob_a
@@ -70,6 +72,7 @@ class TorchSVC(nn.Module):
             support_vectors=torch.from_numpy(obj.support_vectors_),
             intercept=torch.from_numpy(obj.intercept_),
             dual_coef=torch.from_numpy(obj.dual_coef_),
+            classes=torch.from_numpy(obj.classes_),
             prob_a=torch.from_numpy(obj.probA_) if obj.probability else None,
             prob_b=torch.from_numpy(obj.probB_) if obj.probability else None,
         )
@@ -81,11 +84,12 @@ class TorchSVC(nn.Module):
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         ovo, ovr = self.decision_function_ovo_ovr(x)
         if self.n_classes == 2:
-            return (ovo.view(-1) > 0).long()
+            indices = (ovo.view(-1) > 0).long()
         elif self.ovr and self.break_ties:
-            return ovr.argmax(dim=-1)
+            indices = ovr.argmax(dim=-1)
         else:
-            return ovr.round().argmax(dim=-1)
+            indices = ovr.round().argmax(dim=-1)
+        return self.classes[indices]
 
     @torch.jit.export
     def decision_function(self, x: torch.Tensor) -> torch.Tensor:
