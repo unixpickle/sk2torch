@@ -1,10 +1,9 @@
-from typing import Union
+from typing import List, Type, Union
 
 import torch
 import torch.jit
 import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.base import BaseEstimator
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 
 from .label_binarizer import TorchLabelBinarizer
@@ -64,8 +63,8 @@ class TorchMLPClassifier(nn.Module):
         self.label_binarizer = label_binarizer
 
     @classmethod
-    def supports_wrap(cls, obj: BaseEstimator) -> bool:
-        return isinstance(obj, MLPClassifier)
+    def supported_classes(cls) -> List[Type]:
+        return [MLPClassifier]
 
     @classmethod
     def wrap(cls, obj: MLPClassifier) -> "TorchMLPClassifier":

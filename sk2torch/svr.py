@@ -1,10 +1,9 @@
-from typing import Union
+from typing import List, Type, Union
 
 import numpy as np
 import torch
 import torch.jit
 import torch.nn as nn
-from sklearn.base import BaseEstimator
 from sklearn.svm import SVR, LinearSVR, NuSVR
 
 from .kernel import Kernel
@@ -25,12 +24,12 @@ class TorchSVR(nn.Module):
         self.intercept = nn.Parameter(intercept)
 
     @classmethod
-    def supports_wrap(cls, obj: BaseEstimator) -> bool:
-        return isinstance(obj, SVR) or isinstance(obj, NuSVR)
+    def supported_classes(cls) -> List[Type]:
+        return [SVR, NuSVR]
 
     @classmethod
     def wrap(cls, obj: Union[SVR, NuSVR]) -> "TorchSVR":
-        assert not obj._sparse, "sparse SVC not supported"
+        assert not obj._sparse, "sparse SVR not supported"
         return cls(
             kernel=Kernel.wrap(obj),
             support_vectors=torch.from_numpy(obj.support_vectors_),
@@ -62,8 +61,8 @@ class TorchLinearSVR(nn.Module):
         self.intercept = nn.Parameter(intercept)
 
     @classmethod
-    def supports_wrap(cls, obj: BaseEstimator) -> bool:
-        return isinstance(obj, LinearSVR)
+    def supported_classes(cls) -> List[Type]:
+        return [LinearSVR]
 
     @classmethod
     def wrap(cls, obj: LinearSVR) -> "TorchLinearSVR":

@@ -1,7 +1,8 @@
+from typing import List, Type
+
 import torch
 import torch.jit
 import torch.nn as nn
-from sklearn.base import BaseEstimator
 from sklearn.kernel_approximation import Nystroem
 
 from .kernel import Kernel
@@ -17,8 +18,8 @@ class TorchNystroem(nn.Module):
         self.normalization = nn.Parameter(normalization)
 
     @classmethod
-    def supports_wrap(cls, obj: BaseEstimator) -> bool:
-        return isinstance(obj, Nystroem)
+    def supported_classes(cls) -> List[Type]:
+        return [Nystroem]
 
     @classmethod
     def wrap(cls, obj: Nystroem) -> "TorchNystroem":

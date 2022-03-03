@@ -1,9 +1,8 @@
-from typing import Optional
+from typing import List, Optional, Type
 
 import torch
 import torch.jit
 import torch.nn as nn
-from sklearn.base import BaseEstimator
 from sklearn.preprocessing import StandardScaler
 
 
@@ -14,8 +13,8 @@ class TorchStandardScaler(nn.Module):
         self.scale = nn.Parameter(scale if scale is not None else torch.ones(()))
 
     @classmethod
-    def supports_wrap(cls, obj: BaseEstimator) -> bool:
-        return isinstance(obj, StandardScaler)
+    def supported_classes(cls) -> List[Type]:
+        return [StandardScaler]
 
     @classmethod
     def wrap(cls, obj: StandardScaler) -> "TorchStandardScaler":

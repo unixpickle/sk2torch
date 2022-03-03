@@ -1,9 +1,8 @@
-from typing import List, Tuple
+from typing import List, Tuple, Type
 
 import torch
 import torch.jit
 import torch.nn as nn
-from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
 
 
@@ -26,8 +25,8 @@ class TorchPipeline(nn.Module):
         )
 
     @classmethod
-    def supports_wrap(cls, obj: BaseEstimator) -> bool:
-        return isinstance(obj, Pipeline)
+    def supported_classes(cls) -> List[Type]:
+        return [Pipeline]
 
     @classmethod
     def wrap(cls, obj: Pipeline) -> "TorchPipeline":

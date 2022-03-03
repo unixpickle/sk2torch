@@ -1,9 +1,8 @@
-from typing import Optional
+from typing import List, Optional, Type
 
 import torch
 import torch.jit
 import torch.nn as nn
-from sklearn.base import BaseEstimator
 from sklearn.preprocessing import LabelBinarizer
 
 
@@ -22,8 +21,8 @@ class TorchLabelBinarizer(nn.Module):
         self.y_type = y_type
 
     @classmethod
-    def supports_wrap(cls, obj: BaseEstimator) -> bool:
-        return isinstance(obj, LabelBinarizer)
+    def supported_classes(cls) -> List[Type]:
+        return [LabelBinarizer]
 
     @classmethod
     def wrap(cls, obj: LabelBinarizer) -> "TorchLabelBinarizer":

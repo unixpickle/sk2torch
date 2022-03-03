@@ -1,3 +1,3 @@
-from .wrap import wrap
+from .wrap import supported_classes, wrap
 
-__all__ = ["wrap"]
+__all__ = ["supported_classes", "wrap"]

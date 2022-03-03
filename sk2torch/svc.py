@@ -1,11 +1,10 @@
 from copy import deepcopy
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Type, Union
 
 import torch
 import torch.jit
 import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.base import BaseEstimator
 from sklearn.svm import SVC, LinearSVC, NuSVC
 
 from .kernel import Kernel
@@ -58,8 +57,8 @@ class TorchSVC(nn.Module):
                 k += 1
 
     @classmethod
-    def supports_wrap(cls, obj: BaseEstimator) -> bool:
-        return isinstance(obj, SVC) or isinstance(obj, NuSVC)
+    def supported_classes(cls) -> List[Type]:
+        return [SVC, NuSVC]
 
     @classmethod
     def wrap(cls, obj: Union[SVC, NuSVC]) -> "TorchSVC":
@@ -241,8 +240,8 @@ class TorchLinearSVC(nn.Module):
         self.register_buffer("classes", classes)
 
     @classmethod
-    def supports_wrap(cls, obj: BaseEstimator) -> bool:
-        return isinstance(obj, LinearSVC)
+    def supported_classes(cls) -> List[Type]:
+        return [LinearSVC]
 
     @classmethod
     def wrap(cls, obj: LinearSVC) -> "TorchLinearSVC":

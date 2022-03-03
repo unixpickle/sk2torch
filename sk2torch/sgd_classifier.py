@@ -1,10 +1,10 @@
 from copy import deepcopy
+from typing import List, Type
 
 import torch
 import torch.jit
 import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.base import BaseEstimator
 from sklearn.linear_model import SGDClassifier
 
 
@@ -23,8 +23,8 @@ class TorchSGDClassifier(nn.Module):
         self.register_buffer("classes", classes)
 
     @classmethod
-    def supports_wrap(cls, obj: BaseEstimator) -> bool:
-        return isinstance(obj, SGDClassifier)
+    def supported_classes(cls) -> List[Type]:
+        return [SGDClassifier]
 
     @classmethod
     def wrap(cls, obj: SGDClassifier) -> "TorchSGDClassifier":
