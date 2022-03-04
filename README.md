@@ -9,6 +9,10 @@ Problems solved by this project:
 
 See [Usage](#usage) for a high-level example of using the library. See [How it works](#how-it-works) to see which modules are supported.
 
+For fun, here's a vector field produced by differentiating the probability predictions of a two-class SVM (produced by [this script](examples/svm_vector_field.py)):
+
+<img src="examples/svm_vector_field.png" width="300" alt="A vector field quiver plot with two modes">
+
 # Usage
 
 First, train a model with scikit-learn as usual:
@@ -46,6 +50,8 @@ torch.jit.script(torch_model).save("path.pt")
 # ... sk2torch need not be installed to load the model.
 loaded_model = torch.jit.load("path.pt")
 ```
+
+For a full example of training a model and using its PyTorch translation, see [examples/svm_vector_field.py](examples/svm_vector_field.py).
 
 # How it works
 
