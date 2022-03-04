@@ -64,3 +64,11 @@ Which modules are supported? The easiest way to get an up-to-date list is via th
 >>> sk2torch.supported_classes()
 [<class 'sklearn.preprocessing._label.LabelBinarizer'>, <class 'sklearn.svm._classes.LinearSVC'>, <class 'sklearn.svm._classes.LinearSVR'>, <class 'sklearn.neural_network._multilayer_perceptron.MLPClassifier'>, <class 'sklearn.kernel_approximation.Nystroem'>, <class 'sklearn.pipeline.Pipeline'>, <class 'sklearn.linear_model._stochastic_gradient.SGDClassifier'>, <class 'sklearn.preprocessing._data.StandardScaler'>, <class 'sklearn.svm._classes.SVC'>, <class 'sklearn.svm._classes.NuSVC'>, <class 'sklearn.svm._classes.SVR'>, <class 'sklearn.svm._classes.NuSVR'>]
 ```
+
+# Comparison to *sklearn-onnx*
+
+[sklearn-onnx](https://github.com/onnx/sklearn-onnx) is an open source package for converting trained scikit-learn models into [ONNX](https://github.com/Microsoft/onnxruntime). Like sk2torch, sklearn-onnx re-implements inference functions for various models, meaning that it can also provide serialization and GPU acceleration for supported modules.
+
+Naturally, neither library will support modules that aren't manually ported. As a result, the two libraries support different subsets of all available models/methods. For example, sk2torch supports the `SVC` probability prediction methods `predict_proba` and `predict_log_prob`, whereas sklearn-onnx does not. 
+
+While sklearn-onnx exports models to ONNX, sk2torch exports models to Python objects with familiar method names that can be fine-tuned, backpropagated through, and serialized in a user-friendly way. PyTorch is strictly more general than ONNX, since PyTorch models can be [converted](https://pytorch.org/tutorials/advanced/super_resolution_with_onnxruntime.html) to ONNX if desired.
