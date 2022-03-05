@@ -3,6 +3,7 @@ from typing import Any, List
 import torch.nn as nn
 from sklearn.base import BaseEstimator
 
+from .dummy import TorchDummyClassifier
 from .label_binarizer import TorchLabelBinarizer
 from .nn import TorchMLPClassifier
 from .nystroem import TorchNystroem
@@ -18,6 +19,7 @@ from .ttr import TorchTransformedTargetRegressor
 _REGISTRY = [
     TorchDecisionTreeClassifier,
     TorchDecisionTreeRegressor,
+    TorchDummyClassifier,
     TorchLabelBinarizer,
     TorchLinearSVC,
     TorchLinearSVR,
