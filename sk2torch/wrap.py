@@ -11,11 +11,12 @@ from .sgd_classifier import TorchSGDClassifier
 from .standard_scaler import TorchStandardScaler
 from .svc import TorchLinearSVC, TorchSVC
 from .svr import TorchLinearSVR, TorchSVR
-from .tree import TorchDecisionTreeRegressor
+from .tree import TorchDecisionTreeClassifier, TorchDecisionTreeRegressor
 from .ttr import TorchTransformedTargetRegressor
 
 # This list is intentionally kept alphabetical.
 _REGISTRY = [
+    TorchDecisionTreeClassifier,
     TorchDecisionTreeRegressor,
     TorchLabelBinarizer,
     TorchLinearSVC,
