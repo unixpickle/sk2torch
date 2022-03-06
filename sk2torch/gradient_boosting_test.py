@@ -31,8 +31,7 @@ def test_gradient_boosting_classifier(target_type, loss, init_zero):
         loss=loss, init="zero" if init_zero else None, n_estimators=5
     )
     sk_obj.fit(xs, ys)
-    # th_obj = torch.jit.script(TorchGradientBoostingClassifier.wrap(sk_obj))
-    th_obj = TorchGradientBoostingClassifier.wrap(sk_obj)
+    th_obj = torch.jit.script(TorchGradientBoostingClassifier.wrap(sk_obj))
     xs_th = torch.from_numpy(xs)
 
     with torch.no_grad():
