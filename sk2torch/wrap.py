@@ -4,6 +4,7 @@ import torch.nn as nn
 from sklearn.base import BaseEstimator
 
 from .dummy import TorchDummyClassifier
+from .gradient_boosting import TorchGradientBoostingClassifier
 from .label_binarizer import TorchLabelBinarizer
 from .nn import TorchMLPClassifier
 from .nystroem import TorchNystroem
@@ -20,6 +21,7 @@ _REGISTRY = [
     TorchDecisionTreeClassifier,
     TorchDecisionTreeRegressor,
     TorchDummyClassifier,
+    TorchGradientBoostingClassifier,
     TorchLabelBinarizer,
     TorchLinearSVC,
     TorchLinearSVR,
