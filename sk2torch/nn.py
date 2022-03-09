@@ -88,6 +88,7 @@ class TorchMLPClassifier(nn.Module):
     def predict_log_proba(self, x: torch.Tensor) -> torch.Tensor:
         return self.module(x, include_negative=True)
 
+
 class TorchMLPRegressor(nn.Module):
     def __init__(
         self,

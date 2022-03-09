@@ -60,6 +60,7 @@ def test_mlp_classifier(
         assert expected.shape == actual.shape
         assert (actual == expected).all()
 
+
 @pytest.mark.parametrize(
     ("activation", "output_2d", "hidden_sizes"),
     [
@@ -70,9 +71,7 @@ def test_mlp_classifier(
         ("relu", True, (15, 20)),
     ],
 )
-def test_mlp_regressor(
-    activation: str, output_2d: bool, hidden_sizes: Tuple[int, ...]
-):
+def test_mlp_regressor(activation: str, output_2d: bool, hidden_sizes: Tuple[int, ...]):
     rng = np.random.RandomState(1337)
     x = rng.normal(size=(1000, 10))
     perturbed = x + rng.normal(size=x.shape)
