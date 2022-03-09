@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.jit
 import torch.nn as nn
-from sklearn.dummy import DummyClassifier
+from sklearn.dummy import DummyClassifier, DummyRegressor
 
 
 class TorchDummyClassifier(nn.Module):
@@ -128,3 +128,32 @@ class TorchDummyClassifierMulti(TorchDummyClassifier):
     @torch.jit.export
     def predict_log_proba(self, x: torch.Tensor) -> torch.Tensor:
         return [single.predict_log_proba(x) for single in self.singles]
+
+
+class TorchDummyRegressor(nn.Module):
+    def __init__(self, strategy: str, constant: torch.Tensor):
+        super().__init__()
+        if strategy == "constant":
+            self.register_buffer("constant", constant)
+        else:
+            self.constant = nn.Parameter(constant)
+
+    @classmethod
+    def supported_classes(cls) -> List[Type]:
+        return [DummyRegressor]
+
+    @classmethod
+    def wrap(cls, obj: DummyRegressor) -> "TorchDummyRegressor":
+        return cls(
+            strategy=obj.strategy, constant=torch.from_numpy(obj.constant_).view(-1)
+        )
+
+    def forward(self, x: torch.Tensor):
+        return self.predict(x)
+
+    @torch.jit.export
+    def predict(self, x: torch.Tensor) -> torch.Tensor:
+        res = self.constant[None].repeat(len(x), 1)
+        if res.shape[1] == 1:
+            res = res.view(-1)
+        return res

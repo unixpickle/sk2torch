@@ -4,9 +4,9 @@ from collections import Counter
 import numpy as np
 import pytest
 import torch
-from sklearn.dummy import DummyClassifier
+from sklearn.dummy import DummyClassifier, DummyRegressor
 
-from .dummy import TorchDummyClassifier
+from .dummy import TorchDummyClassifier, TorchDummyRegressor
 
 
 @pytest.mark.parametrize(
@@ -88,3 +88,33 @@ def test_dummy_classifier(strategy: str, multi_class: bool):
                 assert (
                     np.max(np.abs(np.mean(x, axis=0) - np.mean(a, axis=0))) < threshold
                 )
+
+
+@pytest.mark.parametrize(
+    ("strategy", "multi_class"),
+    list(
+        itertools.product(
+            ["mean", "median", "quantile", "constant"],
+            [False, True],
+        )
+    ),
+)
+def test_dummy_regressor(strategy: str, multi_class: bool):
+    xs = np.random.normal(size=(10000, 3))
+    ys = np.random.normal(size=(10000,) if not multi_class else (10000, 3))
+
+    sk_obj = DummyRegressor(
+        strategy=strategy,
+        constant=ys[0] if strategy == "constant" else None,
+        quantile=0.5 if strategy == "quantile" else None,
+    )
+    sk_obj.fit(xs, ys)
+    th_obj = TorchDummyRegressor.wrap(sk_obj)
+
+    xs_th = torch.from_numpy(xs)
+
+    with torch.no_grad():
+        expected = sk_obj.predict(xs)
+        actual = th_obj.predict(xs_th).numpy()
+        assert expected.shape == actual.shape
+        assert np.allclose(expected, actual)

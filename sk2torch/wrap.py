@@ -3,7 +3,7 @@ from typing import Any, List
 import torch.nn as nn
 from sklearn.base import BaseEstimator
 
-from .dummy import TorchDummyClassifier
+from .dummy import TorchDummyClassifier, TorchDummyRegressor
 from .gradient_boosting import TorchGradientBoostingClassifier
 from .label_binarizer import TorchLabelBinarizer
 from .linear_regression import TorchLinearRegression
@@ -22,6 +22,7 @@ _REGISTRY = [
     TorchDecisionTreeClassifier,
     TorchDecisionTreeRegressor,
     TorchDummyClassifier,
+    TorchDummyRegressor,
     TorchGradientBoostingClassifier,
     TorchLabelBinarizer,
     TorchLinearRegression,
