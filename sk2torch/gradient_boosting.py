@@ -1,11 +1,12 @@
-from typing import List, Optional, Type
+from abc import abstractmethod
+from typing import List, Type, Union
 
 import torch
 import torch.jit
 import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.base import BaseEstimator
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
 
 
 class _GradientBoostingStage(nn.Module):
@@ -19,39 +20,53 @@ class _GradientBoostingStage(nn.Module):
         return torch.stack([tree(x).view(-1) for tree in self.trees], dim=-1)
 
 
-class TorchGradientBoostingClassifier(nn.Module):
+class _GradientBoostingBase(nn.Module):
     def __init__(
         self,
-        stages: List[_GradientBoostingStage],
-        classes: torch.Tensor,
-        init: Optional[nn.Module],
-        loss: str,
-        learning_rate: float,
+        obj: Union[GradientBoostingClassifier, GradientBoostingRegressor],
     ):
         super().__init__()
-        assert loss in ["exponential", "deviance"]
-        self.stages = nn.ModuleList(stages)
-        self.register_buffer("classes", classes)
-        self.has_init = init is not None
-        if self.has_init:
-            self.init = init
-        else:
-            # Needed to prevent TorchScript from erroring.
-            self.init = nn.Identity()
+        self.has_init = obj.init_ != "zero"
+        from .wrap import wrap
+
+        self.init = wrap(obj.init_) if self.has_init else nn.Identity()
+        if not self.has_init:
 
             def dummy_fn(x: torch.Tensor) -> torch.Tensor:
                 return x
 
+            self.init.predict = dummy_fn
             self.init.predict_proba = dummy_fn
-        self.loss = loss
-        self.learning_rate = learning_rate
 
-        dimension = len(stages[0].trees)
+        self.stages = nn.ModuleList([_GradientBoostingStage(x) for x in obj.estimators_.tolist()])
+        self.learning_rate = obj.learning_rate
+        self.loss = obj.loss
+
+        dimension = len(self.stages[0].trees)
         param = next(self.parameters())
         self.register_buffer(
             "zero_out",
             torch.zeros(dimension, dtype=param.dtype, device=param.device),
         )
+
+    def _raw_output(self, x: torch.Tensor) -> torch.Tensor:
+        out = self._init_outputs(x)
+        for stage in self.stages:
+            out = out + stage.forward(x) * self.learning_rate
+        if out.shape[1] == 1:
+            return out.view(-1)
+        return out
+
+    @abstractmethod
+    def _init_outputs(self, x: torch.Tensor) -> torch.Tensor:
+        pass
+
+
+class TorchGradientBoostingClassifier(_GradientBoostingBase):
+    def __init__(self, obj: GradientBoostingClassifier):
+        super().__init__(obj)
+        assert self.loss in ["exponential", "deviance"]
+        self.register_buffer("classes", torch.from_numpy(obj.classes_))
 
     @classmethod
     def supported_classes(cls) -> List[Type]:
@@ -59,15 +74,7 @@ class TorchGradientBoostingClassifier(nn.Module):
 
     @classmethod
     def wrap(cls, obj: GradientBoostingClassifier) -> "TorchGradientBoostingClassifier":
-        from .wrap import wrap
-
-        return cls(
-            stages=[_GradientBoostingStage(x) for x in obj.estimators_.tolist()],
-            classes=torch.from_numpy(obj.classes_),
-            init=wrap(obj.init_) if obj.init_ != "zero" else None,
-            loss=obj.loss,
-            learning_rate=obj.learning_rate,
-        )
+        return cls(obj)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.predict(x)
@@ -102,12 +109,7 @@ class TorchGradientBoostingClassifier(nn.Module):
 
     @torch.jit.export
     def decision_function(self, x: torch.Tensor) -> torch.Tensor:
-        out = self._init_outputs(x)
-        for stage in self.stages:
-            out = out + stage.forward(x) * self.learning_rate
-        if out.shape[1] == 1:
-            return out.view(-1)
-        return out
+        return self._raw_output(x)
 
     def _init_outputs(self, x: torch.Tensor) -> torch.Tensor:
         if not self.has_init:
