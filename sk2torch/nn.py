@@ -44,11 +44,10 @@ class _WrappedMLP(nn.Module):
         x = self.layers(x)
         if x.shape[1] == 1 and self.out_act == "logistic" and include_negative:
             x = torch.cat([F.logsigmoid(-x), F.logsigmoid(x)], dim=-1)
-        else:
-            if self.out_act == "logistic":
-                x = F.logsigmoid(x)
-            elif self.out_act == "softmax":
-                x = F.log_softmax(x, dim=-1)
+        elif self.out_act == "logistic":
+            x = F.logsigmoid(x)
+        elif self.out_act == "softmax":
+            x = F.log_softmax(x, dim=-1)
         return x
 
 
