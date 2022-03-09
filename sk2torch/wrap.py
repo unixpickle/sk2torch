@@ -7,7 +7,7 @@ from .dummy import TorchDummyClassifier
 from .gradient_boosting import TorchGradientBoostingClassifier
 from .label_binarizer import TorchLabelBinarizer
 from .linear_regression import TorchLinearRegression
-from .nn import TorchMLPClassifier
+from .nn import TorchMLPClassifier, TorchMLPRegressor
 from .nystroem import TorchNystroem
 from .pipeline import TorchPipeline
 from .sgd_classifier import TorchSGDClassifier
@@ -28,6 +28,7 @@ _REGISTRY = [
     TorchLinearSVC,
     TorchLinearSVR,
     TorchMLPClassifier,
+    TorchMLPRegressor,
     TorchNystroem,
     TorchPipeline,
     TorchSGDClassifier,

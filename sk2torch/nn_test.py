@@ -6,9 +6,9 @@ import pytest
 import torch
 import torch.jit
 from sklearn.exceptions import ConvergenceWarning
-from sklearn.neural_network import MLPClassifier
+from sklearn.neural_network import MLPClassifier, MLPRegressor
 
-from .nn import TorchMLPClassifier
+from .nn import TorchMLPClassifier, TorchMLPRegressor
 
 
 @pytest.mark.parametrize(
@@ -59,3 +59,42 @@ def test_mlp_classifier(
         actual = th_model.predict(x_th).numpy()
         assert expected.shape == actual.shape
         assert (actual == expected).all()
+
+@pytest.mark.parametrize(
+    ("activation", "output_2d", "hidden_sizes"),
+    [
+        ("relu", False, (15, 20)),
+        ("tanh", False, (15, 20)),
+        ("logistic", False, (15, 20)),
+        ("identity", False, (15, 20)),
+        ("relu", True, (15, 20)),
+    ],
+)
+def test_mlp_regressor(
+    activation: str, output_2d: bool, hidden_sizes: Tuple[int, ...]
+):
+    rng = np.random.RandomState(1337)
+    x = rng.normal(size=(1000, 10))
+    perturbed = x + rng.normal(size=x.shape)
+    if not output_2d:
+        y = perturbed.sum(1)
+    else:
+        y = np.stack([perturbed.sum(1), np.sqrt(np.abs(perturbed.sum(1)))], axis=-1)
+
+    sk_model = MLPRegressor(
+        hidden_layer_sizes=hidden_sizes,
+        activation=activation,
+    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=ConvergenceWarning)
+        sk_model.fit(x[:-100], y[:-100])
+    th_model = torch.jit.script(TorchMLPRegressor.wrap(sk_model))
+
+    x = x[-100:]
+    x_th = torch.from_numpy(x)
+
+    with torch.no_grad():
+        expected = sk_model.predict(x)
+        actual = th_model.predict(x_th).numpy()
+        assert expected.shape == actual.shape
+        assert np.allclose(actual, expected)

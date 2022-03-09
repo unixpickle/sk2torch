@@ -88,3 +88,29 @@ class TorchMLPClassifier(nn.Module):
     @torch.jit.export
     def predict_log_proba(self, x: torch.Tensor) -> torch.Tensor:
         return self.module(x, include_negative=True)
+
+class TorchMLPRegressor(nn.Module):
+    def __init__(
+        self,
+        module: _WrappedMLP,
+    ):
+        super().__init__()
+        self.module = module
+
+    @classmethod
+    def supported_classes(cls) -> List[Type]:
+        return [MLPRegressor]
+
+    @classmethod
+    def wrap(cls, obj: MLPRegressor) -> "TorchMLPRegressor":
+        return cls(module=_WrappedMLP.wrap(obj))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.predict(x)
+
+    @torch.jit.export
+    def predict(self, x: torch.Tensor) -> torch.Tensor:
+        out = self.module(x)
+        if out.shape[1] == 1:
+            return out.view(-1)
+        return out
