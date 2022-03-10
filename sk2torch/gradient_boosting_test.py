@@ -2,9 +2,12 @@ import numpy as np
 import pytest
 import torch
 import torch.jit
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
 
-from .gradient_boosting import TorchGradientBoostingClassifier
+from .gradient_boosting import (
+    TorchGradientBoostingClassifier,
+    TorchGradientBoostingRegressor,
+)
 
 
 @pytest.mark.parametrize(
@@ -49,3 +52,21 @@ def test_gradient_boosting_classifier(target_type, loss, init_zero):
         actual = th_obj.predict(xs_th).numpy()
         assert actual.shape == expected.shape
         assert (actual == expected).all()
+
+
+@pytest.mark.parametrize(("init_zero",), [(False,), (True,)])
+def test_gradient_boosting_regressor(init_zero):
+    xs = np.random.normal(size=(1000, 3)) * 2
+    ys = np.mean(xs, axis=-1)
+    sk_obj = GradientBoostingRegressor(
+        init="zero" if init_zero else None, n_estimators=5
+    )
+    sk_obj.fit(xs, ys)
+    th_obj = torch.jit.script(TorchGradientBoostingRegressor.wrap(sk_obj))
+    xs_th = torch.from_numpy(xs)
+
+    with torch.no_grad():
+        expected = sk_obj.predict(xs)
+        actual = th_obj.predict(xs_th).numpy()
+        assert actual.shape == expected.shape
+        assert np.allclose(actual, expected)

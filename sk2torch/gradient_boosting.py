@@ -38,7 +38,9 @@ class _GradientBoostingBase(nn.Module):
             self.init.predict = dummy_fn
             self.init.predict_proba = dummy_fn
 
-        self.stages = nn.ModuleList([_GradientBoostingStage(x) for x in obj.estimators_.tolist()])
+        self.stages = nn.ModuleList(
+            [_GradientBoostingStage(x) for x in obj.estimators_.tolist()]
+        )
         self.learning_rate = obj.learning_rate
         self.loss = obj.loss
 
@@ -129,3 +131,25 @@ class TorchGradientBoostingClassifier(_GradientBoostingBase):
             else:
                 # https://github.com/scikit-learn/scikit-learn/blob/7e1e6d09bcc2eaeba98f7e737aac2ac782f0e5f1/sklearn/ensemble/_gb_losses.py#L866
                 return init_probs.log()
+
+
+class TorchGradientBoostingRegressor(_GradientBoostingBase):
+    @classmethod
+    def supported_classes(cls) -> List[Type]:
+        return [GradientBoostingRegressor]
+
+    @classmethod
+    def wrap(cls, obj: GradientBoostingRegressor) -> "TorchGradientBoostingRegressor":
+        return cls(obj)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.predict(x)
+
+    @torch.jit.export
+    def predict(self, x: torch.Tensor) -> torch.Tensor:
+        return self._raw_output(x)
+
+    def _init_outputs(self, x: torch.Tensor) -> torch.Tensor:
+        if not self.has_init:
+            return self.zero_out[None].repeat(len(x), 1)
+        return self.init.predict(x).view(len(x), -1)
