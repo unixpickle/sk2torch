@@ -79,5 +79,5 @@ class TorchLogisticRegression(nn.Module):
             return F.log_softmax(F.logsigmoid(logits), dim=-1)
         else:
             if len(logits.shape) == 1:
-                logits = logits[:, None].repeat(1, 2)
+                logits = torch.stack([-logits / 2, logits / 2], dim=-1)
             return F.log_softmax(logits, dim=-1)
