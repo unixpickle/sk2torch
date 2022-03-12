@@ -32,7 +32,7 @@ def xor_and_dataset(**_) -> Tuple[np.ndarray, np.ndarray]:
     ("dataset", "loss", "check_probs", "fit_intercept", "space_classes"),
     [
         (load_breast_cancer, "log", False, True, False),
-        (load_breast_cancer, "log", False, True, False),
+        (load_breast_cancer, "log", False, True, True),
         (load_digits, "log", False, True, False),
         (load_digits, "log", False, True, True),
         (xor_dataset, "log", True, True, False),
