@@ -10,6 +10,7 @@ from .gradient_boosting import (
 )
 from .label_binarizer import TorchLabelBinarizer
 from .linear_regression import TorchLinearRegression
+from .logistic_regression import TorchLogisticRegression
 from .nn import TorchMLPClassifier, TorchMLPRegressor
 from .nystroem import TorchNystroem
 from .pipeline import TorchPipeline
@@ -32,6 +33,7 @@ _REGISTRY = [
     TorchLinearRegression,
     TorchLinearSVC,
     TorchLinearSVR,
+    TorchLogisticRegression,
     TorchMLPClassifier,
     TorchMLPRegressor,
     TorchNystroem,
