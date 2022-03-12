@@ -5,8 +5,8 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from .linear_model_test import xor_and_dataset
 from .pipeline import TorchPipeline
-from .sgd_classifier_test import xor_and_dataset
 
 
 def test_pipeline_classifier():

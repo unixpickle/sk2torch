@@ -9,16 +9,19 @@ from .gradient_boosting import (
     TorchGradientBoostingRegressor,
 )
 from .label_binarizer import TorchLabelBinarizer
-from .linear_regression import TorchLinearRegression
-from .logistic_regression import TorchLogisticRegression
+from .linear_model import (
+    TorchLinearClassifier,
+    TorchLinearRegression,
+    TorchLogisticRegression,
+    TorchSGDClassifier,
+)
 from .nn import TorchMLPClassifier, TorchMLPRegressor
 from .nystroem import TorchNystroem
 from .pipeline import TorchPipeline
-from .sgd_classifier import TorchSGDClassifier
 from .stacking import TorchStackingClassifier
 from .standard_scaler import TorchStandardScaler
-from .svc import TorchLinearSVC, TorchSVC
-from .svr import TorchLinearSVR, TorchSVR
+from .svc import TorchSVC
+from .svr import TorchSVR
 from .tree import TorchDecisionTreeClassifier, TorchDecisionTreeRegressor
 from .ttr import TorchTransformedTargetRegressor
 
@@ -31,9 +34,8 @@ _REGISTRY = [
     TorchGradientBoostingClassifier,
     TorchGradientBoostingRegressor,
     TorchLabelBinarizer,
+    TorchLinearClassifier,
     TorchLinearRegression,
-    TorchLinearSVC,
-    TorchLinearSVR,
     TorchLogisticRegression,
     TorchMLPClassifier,
     TorchMLPRegressor,

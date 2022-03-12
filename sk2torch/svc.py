@@ -1,11 +1,10 @@
-from copy import deepcopy
 from typing import List, Optional, Tuple, Type, Union
 
 import torch
 import torch.jit
 import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.svm import SVC, LinearSVC, NuSVC
+from sklearn.svm import SVC, NuSVC
 
 from .kernel import Kernel
 
@@ -228,51 +227,3 @@ class TorchSVC(nn.Module):
         coeffs = self.dual_coef[j, offset : offset + count]
         kernel_row = kernel_out[:, offset : offset + count]
         return kernel_row @ coeffs
-
-
-class TorchLinearSVC(nn.Module):
-    def __init__(
-        self, coef: torch.Tensor, intercept: torch.Tensor, classes: torch.Tensor
-    ):
-        super().__init__()
-        self.coef = nn.Parameter(coef)
-        self.intercept = nn.Parameter(intercept)
-        self.register_buffer("classes", classes)
-
-    @classmethod
-    def supported_classes(cls) -> List[Type]:
-        return [LinearSVC]
-
-    @classmethod
-    def wrap(cls, obj: LinearSVC) -> "TorchLinearSVC":
-        obj = deepcopy(obj)
-        obj.densify()
-        coef = torch.from_numpy(obj.coef_)
-        return cls(
-            coef=coef,
-            intercept=(
-                torch.from_numpy(obj.intercept_)
-                if obj.fit_intercept
-                else torch.zeros_like(coef[:, 0])
-            ),
-            classes=torch.from_numpy(obj.classes_),
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.predict(x)
-
-    @torch.jit.export
-    def predict(self, x: torch.Tensor) -> torch.Tensor:
-        decisions = self.decision_function(x)
-        if len(decisions.shape) == 1:
-            indices = (decisions > 0).long()
-        else:
-            indices = decisions.argmax(-1)
-        return self.classes[indices]
-
-    @torch.jit.export
-    def decision_function(self, x: torch.Tensor) -> torch.Tensor:
-        decisions = (x @ self.coef.t()) + self.intercept
-        if decisions.shape[1] == 1:
-            return decisions.view(-1)
-        return decisions

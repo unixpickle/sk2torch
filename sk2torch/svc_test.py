@@ -4,9 +4,39 @@ import numpy as np
 import pytest
 import torch
 import torch.jit
-from sklearn.svm import SVC, LinearSVC, NuSVC
+from sklearn.svm import SVC, NuSVC
 
-from .svc import TorchLinearSVC, TorchSVC
+from .svc import TorchSVC
+
+
+def quadrant_dataset(
+    n_classes: int, space_classes: bool
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    A dataset to classify the quadrant of a 2D point.
+
+    This dataset is not linearly separable.
+    """
+    xs = np.random.RandomState(1337).random(size=(500, 2)) * 2 - 1
+    ys = np.array([int(x[0] > 0) | (int(x[1] > 0) << 1) for x in xs])
+
+    # Put some empty space around the decision boundary.
+    indices = np.max(np.abs(xs) > 0.1, axis=-1)
+    xs, ys = xs[indices], ys[indices]
+
+    if n_classes == 2:
+        indices = np.logical_or(ys == 0, ys == 1)
+        xs, ys = xs[indices], ys[indices]
+    elif n_classes == 3:
+        indices = np.logical_or(np.logical_or(ys == 0, ys == 1), ys == 2)
+        xs, ys = xs[indices], ys[indices]
+    else:
+        assert n_classes == 4
+
+    if space_classes:
+        ys = np.where(ys > n_classes // 2, 1 + (n_classes - ys) + n_classes // 2, ys)
+
+    return xs, ys
 
 
 @pytest.mark.parametrize(
@@ -77,58 +107,3 @@ def test_svc(
             expected = actual
             actual = model_th.predict_log_proba(test_xs_th).exp().numpy()
             assert (np.abs(actual - expected) < 1e-3).all()
-
-
-@pytest.mark.parametrize(
-    ("fit_intercept", "n_classes", "space_classes"),
-    [
-        (False, 2, False),
-        (True, 2, False),
-        (False, 3, False),
-        (True, 3, False),
-        (True, 4, True),
-    ],
-)
-def test_linear_svc(fit_intercept: bool, n_classes: int, space_classes: int):
-    xs, ys = quadrant_dataset(n_classes, space_classes)
-
-    test_xs = np.random.random(size=(128, 2)) * 2 - 1
-    test_xs_th = torch.from_numpy(test_xs)
-
-    model = LinearSVC(fit_intercept=fit_intercept, intercept_scaling=2.314)
-    model.fit(xs, ys)
-    model_th = torch.jit.script(TorchLinearSVC.wrap(model))
-
-    with torch.no_grad():
-        expected = model.decision_function(test_xs)
-        actual = model_th.decision_function(test_xs_th).numpy()
-        assert (np.abs(actual - expected) < 1e-8).all()
-
-        expected = model.predict(test_xs)
-        actual = model_th.predict(test_xs_th).numpy()
-        assert (actual == expected).all()
-
-
-def quadrant_dataset(
-    n_classes: int, space_classes: bool
-) -> Tuple[np.ndarray, np.ndarray]:
-    xs = np.random.RandomState(1337).random(size=(500, 2)) * 2 - 1
-    ys = np.array([int(x[0] > 0) | (int(x[1] > 0) << 1) for x in xs])
-
-    # Put some empty space around the decision boundary.
-    indices = np.max(np.abs(xs) > 0.1, axis=-1)
-    xs, ys = xs[indices], ys[indices]
-
-    if n_classes == 2:
-        indices = np.logical_or(ys == 0, ys == 1)
-        xs, ys = xs[indices], ys[indices]
-    elif n_classes == 3:
-        indices = np.logical_or(np.logical_or(ys == 0, ys == 1), ys == 2)
-        xs, ys = xs[indices], ys[indices]
-    else:
-        assert n_classes == 4
-
-    if space_classes:
-        ys = np.where(ys > n_classes // 2, 1 + (n_classes - ys) + n_classes // 2, ys)
-
-    return xs, ys
