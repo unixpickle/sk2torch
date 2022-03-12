@@ -24,6 +24,9 @@ class TorchStackingClassifier(nn.Module):
             fill_unsupported(model, "predict_proba", "decision_function", "predict")
         self.stack_methods = stack_methods
         self.final_estimator = final_estimator
+        fill_unsupported(
+            self.final_estimator, "predict_proba", "decision_function", "predict"
+        )
         self.register_buffer("classes", classes)
 
     @classmethod
@@ -41,6 +44,21 @@ class TorchStackingClassifier(nn.Module):
             final_estimator=wrap(obj.final_estimator_),
             classes=torch.from_numpy(obj.classes_),
         )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.classes[self.final_estimator(self.transform(x))]
+
+    @torch.jit.export
+    def predict(self, x: torch.Tensor) -> torch.Tensor:
+        return self.classes[self.final_estimator.predict(self.transform(x))]
+
+    @torch.jit.export
+    def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
+        return self.final_estimator.predict_proba(self.transform(x))
+
+    @torch.jit.export
+    def decision_function(self, x: torch.Tensor) -> torch.Tensor:
+        return self.final_estimator.decision_function(self.transform(x))
 
     @torch.jit.export
     def transform(self, x: torch.Tensor) -> torch.Tensor:
@@ -61,4 +79,4 @@ class TorchStackingClassifier(nn.Module):
             outputs.append(out)
         if self.passthrough:
             outputs.append(x.view(len(x), -1))
-        return torch.cat(outputs, dim=-1)
+        return torch.cat(outputs, dim=-1).to(x)

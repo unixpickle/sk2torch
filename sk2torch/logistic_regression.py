@@ -31,7 +31,9 @@ class TorchLogisticRegression(nn.Module):
         est = deepcopy(obj)
         est.densify()
         multi_class = est.multi_class
-        if multi_class == "auto" and (len(est.classes_) == 2 or est.solver == "liblinear"):
+        if multi_class == "auto" and (
+            len(est.classes_) == 2 or est.solver == "liblinear"
+        ):
             multi_class = "ovr"
         return cls(
             multi_class=multi_class,
@@ -76,7 +78,9 @@ class TorchLogisticRegression(nn.Module):
         logits = self.decision_function(x)
         if self.multi_class == "ovr":
             if len(logits.shape) == 1:
-                return torch.stack([F.logsigmoid(-logits), F.logsigmoid(logits)], dim=-1)
+                return torch.stack(
+                    [F.logsigmoid(-logits), F.logsigmoid(logits)], dim=-1
+                )
             return F.log_softmax(F.logsigmoid(logits), dim=-1)
         else:
             if len(logits.shape) == 1:

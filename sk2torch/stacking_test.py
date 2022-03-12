@@ -8,7 +8,7 @@ from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import StackingClassifier
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import SGDClassifier
-from sklearn.svm import SVC, LinearSVC
+from sklearn.svm import LinearSVC
 
 from .stacking import TorchStackingClassifier
 
@@ -48,7 +48,6 @@ def test_stacking_classifier(
 
     sk_obj = StackingClassifier(
         estimators=classifiers,
-        final_estimator=SVC(probability=True),
         stack_method=method,
         passthrough=passthrough,
     )
@@ -66,5 +65,19 @@ def test_stacking_classifier(
         actual = th_obj.transform(xs_th).numpy()
         expected = sk_obj.transform(xs)
         assert actual.shape == expected.shape
-        # Accuracy is lower because SVC predict_proba is slightly inaccurate
-        assert (np.abs(actual - expected) < 3e-3).all()
+        assert np.allclose(actual, expected)
+
+        actual = th_obj.predict(xs_th).numpy()
+        expected = sk_obj.predict(xs)
+        assert actual.shape == expected.shape
+        assert (actual == expected).all()
+
+        actual = th_obj.decision_function(xs_th).numpy()
+        expected = sk_obj.decision_function(xs)
+        assert actual.shape == expected.shape
+        assert np.allclose(actual, expected)
+
+        actual = th_obj.predict_proba(xs_th).numpy()
+        expected = sk_obj.predict_proba(xs)
+        assert actual.shape == expected.shape
+        assert np.allclose(actual, expected)
