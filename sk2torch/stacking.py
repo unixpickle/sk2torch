@@ -3,7 +3,7 @@ from typing import List, Type
 import torch
 import torch.jit
 import torch.nn as nn
-from sklearn.ensemble import StackingClassifier
+from sklearn.ensemble import StackingClassifier, StackingRegressor
 
 from .util import fill_unsupported
 
@@ -46,7 +46,7 @@ class TorchStackingClassifier(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.classes[self.final_estimator(self.transform(x))]
+        return self.predict(x)
 
     @torch.jit.export
     def predict(self, x: torch.Tensor) -> torch.Tensor:
@@ -77,6 +77,49 @@ class TorchStackingClassifier(nn.Module):
             if len(out.shape) == 1:
                 out = out[:, None]
             outputs.append(out)
+        if self.passthrough:
+            outputs.append(x.view(len(x), -1))
+        return torch.cat(outputs, dim=-1).to(x)
+
+
+class TorchStackingRegressor(nn.Module):
+    def __init__(
+        self,
+        passthrough: bool,
+        estimators: List[nn.Module],
+        final_estimator: nn.Module,
+    ):
+        super().__init__()
+        self.passthrough = passthrough
+        self.estimators = nn.ModuleList(estimators)
+        self.final_estimator = final_estimator
+
+    @classmethod
+    def supported_classes(cls) -> List[Type]:
+        return [StackingRegressor]
+
+    @classmethod
+    def wrap(cls, obj: StackingRegressor) -> "TorchStackingRegressor":
+        from .wrap import wrap
+
+        return cls(
+            passthrough=obj.passthrough,
+            estimators=[wrap(x) for x in obj.estimators_],
+            final_estimator=wrap(obj.final_estimator_),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.predict(x)
+
+    @torch.jit.export
+    def predict(self, x: torch.Tensor) -> torch.Tensor:
+        return self.final_estimator.predict(self.transform(x))
+
+    @torch.jit.export
+    def transform(self, x: torch.Tensor) -> torch.Tensor:
+        outputs = []
+        for i, estimator in enumerate(self.estimators):
+            outputs.append(estimator.predict(x).view(-1, 1))
         if self.passthrough:
             outputs.append(x.view(len(x), -1))
         return torch.cat(outputs, dim=-1).to(x)

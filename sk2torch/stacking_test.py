@@ -4,13 +4,13 @@ import numpy as np
 import pytest
 import torch
 import torch.jit
-from sklearn.dummy import DummyClassifier
-from sklearn.ensemble import StackingClassifier
+from sklearn.dummy import DummyClassifier, DummyRegressor
+from sklearn.ensemble import StackingClassifier, StackingRegressor
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import SGDClassifier
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC, LinearSVR
 
-from .stacking import TorchStackingClassifier
+from .stacking import TorchStackingClassifier, TorchStackingRegressor
 
 
 @pytest.mark.parametrize(
@@ -38,7 +38,7 @@ def test_stacking_classifier(
 
     classifiers = [
         ("dummy", DummyClassifier(strategy="prior")),  # no decision_function
-        ("svc", SGDClassifier(loss="log")),  # all methods supported
+        ("sgd_classifier", SGDClassifier(loss="log")),  # all methods supported
         ("linear_svc", LinearSVC()),  # no predict_proba
     ]
     if method == "decision_function":
@@ -52,7 +52,7 @@ def test_stacking_classifier(
         passthrough=passthrough,
     )
     if drop_classifier:
-        sk_obj.set_params(svc="drop")
+        sk_obj.set_params(sgd_classifier="drop")
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=ConvergenceWarning)
         warnings.filterwarnings("ignore", category=UserWarning)
@@ -79,5 +79,48 @@ def test_stacking_classifier(
 
         actual = th_obj.predict_proba(xs_th).numpy()
         expected = sk_obj.predict_proba(xs)
+        assert actual.shape == expected.shape
+        assert np.allclose(actual, expected)
+
+
+@pytest.mark.parametrize(
+    ("drop_model", "passthrough"),
+    [
+        (drop_model, passthrough)
+        for drop_model in [False, True]
+        for passthrough in [False, True]
+    ],
+)
+def test_stacking_regressor(drop_model: bool, passthrough: bool):
+    rs = np.random.RandomState(1338)
+    xs = rs.normal(size=(1000, 10))
+    ys = np.mean((xs + rs.normal(size=xs.shape) * 0.1 + 0.1) ** 2, axis=-1)
+
+    classifiers = [
+        ("dummy", DummyRegressor()),
+        ("linear_svr", LinearSVR()),
+    ]
+
+    sk_obj = StackingRegressor(
+        estimators=classifiers,
+        passthrough=passthrough,
+    )
+    if drop_model:
+        sk_obj.set_params(linear_svr="drop")
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=ConvergenceWarning)
+        sk_obj.fit(xs, ys)
+
+    th_obj = torch.jit.script(TorchStackingRegressor.wrap(sk_obj))
+
+    xs_th = torch.from_numpy(xs)
+    with torch.no_grad():
+        actual = th_obj.transform(xs_th).numpy()
+        expected = sk_obj.transform(xs)
+        assert actual.shape == expected.shape
+        assert np.allclose(actual, expected)
+
+        actual = th_obj.predict(xs_th).numpy()
+        expected = sk_obj.predict(xs)
         assert actual.shape == expected.shape
         assert np.allclose(actual, expected)
