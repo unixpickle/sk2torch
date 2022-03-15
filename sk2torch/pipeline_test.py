@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.jit
+from sklearn.kernel_approximation import Nystroem
 from sklearn.linear_model import SGDClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -55,12 +56,30 @@ def test_pipeline_transform():
     with torch.no_grad():
         expected = sk_obj.transform(x)
         actual = th_obj.transform(x_th).numpy()
-        assert (expected == actual).all()
+        assert np.allclose(expected, actual)
 
         # forward() should be equivalent
         actual = th_obj(x_th).numpy()
-        assert (expected == actual).all()
+        assert np.allclose(expected, actual)
 
         expected = sk_obj.inverse_transform(x)
         actual = th_obj.inverse_transform(x_th).numpy()
+        assert np.allclose(expected, actual)
+
+
+def test_pipeline_transform_no_inverse():
+    x, y = xor_and_dataset()
+    sk_obj = Pipeline(
+        [
+            ("center", Nystroem(n_components=2)),
+            ("scale", StandardScaler()),
+        ]
+    )
+    sk_obj.fit(x, y)
+    th_obj = torch.jit.script(TorchPipeline.wrap(sk_obj))
+
+    x_th = torch.from_numpy(x)
+    with torch.no_grad():
+        expected = sk_obj.transform(x)
+        actual = th_obj.transform(x_th).numpy()
         assert np.allclose(expected, actual)
