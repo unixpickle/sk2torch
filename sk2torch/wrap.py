@@ -17,6 +17,7 @@ from .linear_model import (
 )
 from .nn import TorchMLPClassifier, TorchMLPRegressor
 from .nystroem import TorchNystroem
+from .pca import TorchPCA
 from .pipeline import TorchPipeline
 from .stacking import TorchStackingClassifier, TorchStackingRegressor
 from .standard_scaler import TorchStandardScaler
@@ -40,6 +41,7 @@ _REGISTRY = [
     TorchMLPClassifier,
     TorchMLPRegressor,
     TorchNystroem,
+    TorchPCA,
     TorchPipeline,
     TorchSGDClassifier,
     TorchStackingClassifier,
