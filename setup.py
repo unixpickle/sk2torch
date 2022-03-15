@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="sk2torch",
-    version="1.0.0",
+    version="1.1.0",
     description="Convert scikit-learn models to PyTorch modules",
     long_description="Convert scikit-learn models to PyTorch modules",
     packages=["sk2torch"],
