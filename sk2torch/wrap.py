@@ -15,6 +15,7 @@ from .linear_model import (
     TorchLogisticRegression,
     TorchSGDClassifier,
 )
+from .min_max_scaler import TorchMinMaxScaler
 from .nn import TorchMLPClassifier, TorchMLPRegressor
 from .nystroem import TorchNystroem
 from .pca import TorchPCA
@@ -40,6 +41,7 @@ _REGISTRY = [
     TorchLogisticRegression,
     TorchMLPClassifier,
     TorchMLPRegressor,
+    TorchMinMaxScaler,
     TorchNystroem,
     TorchPCA,
     TorchPipeline,
