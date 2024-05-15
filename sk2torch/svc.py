@@ -188,6 +188,8 @@ class TorchSVC(nn.Module):
         self, x: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Compute the one-versus-one and one-versus-rest decision functions."""
+        if x.dtype != self.support_vectors.dtype:
+            x = x.to(self.support_vectors.dtype)
         kernel_out = self.kernel(x, self.support_vectors)
 
         votes = torch.zeros((len(x), self.n_classes)).to(kernel_out)
